@@ -1,0 +1,38 @@
+<script>
+var iframeOriginalSrc;
+
+function refreshTime(seconds) {
+  const iframe = document.getElementsByTagName('iframe')[0];
+  iframeOriginalSrc ??= iframe.src;
+
+  console.log(`[update#4] refreshing yt video with ${seconds} seconds`);
+  iframe.src = iframeOriginalSrc + `?start=${seconds}&autoplay=1`;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const activationTag = [...document.querySelectorAll("a.tag")]
+    .find(el => el.textContent.trim().toLowerCase() === "#youtube-local");
+
+  if (!activationTag) return;
+  activationTag.remove();
+
+  const links = document.querySelectorAll('a.external-link[href*="youtube.com/watch"]');
+
+  links.forEach(link => {
+    const url = new URL(link.href);
+    const timeParam = url.searchParams.get("t");
+
+    if (timeParam) {
+      const link_time = parseInt(timeParam);
+
+      link.href = "#player";
+      link.target = "#player";
+      link.classList.remove("external-link");
+      link.onclick = function (event) {
+        event.preventDefault();
+        refreshTime(link_time);
+      };
+    }
+  });
+});
+</script>
