@@ -1,16 +1,22 @@
 <script>
-var iframeOriginalSrc;
+let iframeOriginalSrc;
+let playerIframe;
 
 function refreshTime(seconds) {
-  const iframe = document.getElementsByTagName('iframe')[0];
-  iframeOriginalSrc ??= iframe.src;
+  if (!playerIframe) {
+    playerIframe = document.querySelector("iframe");
+    if (!playerIframe) return;
+  }
 
-  console.log(`[update#4] refreshing yt video with ${seconds} seconds`);
-  iframe.src = iframeOriginalSrc + `?start=${seconds}&autoplay=1`;
+  iframeOriginalSrc ??= playerIframe.src;
+
+  const sep = iframeOriginalSrc.includes("?") ? "&" : "?";
+  playerIframe.src = iframeOriginalSrc + `${sep}start=${seconds}&autoplay=1`;
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  const activationTag = [...document.querySelectorAll("a.tag")]
+document.addEventListener("DOMContentLoaded", () => {
+
+  const activationTag = Array.from(document.querySelectorAll("a.tag"))
     .find(el => el.textContent.trim().toLowerCase() === "#youtube-local");
 
   if (!activationTag) return;
@@ -22,17 +28,33 @@ document.addEventListener("DOMContentLoaded", function () {
     const url = new URL(link.href);
     const timeParam = url.searchParams.get("t");
 
-    if (timeParam) {
-      const link_time = parseInt(timeParam);
+    if (!timeParam) return;
 
-      link.href = "#player";
-      link.target = "#player";
-      link.classList.remove("external-link");
-      link.onclick = function (event) {
-        event.preventDefault();
-        refreshTime(link_time);
-      };
-    }
+    const seconds = parseInt(timeParam);
+
+    link.dataset.start = seconds;
+    link.href = "#player";
+    link.classList.remove("external-link");
   });
+
+});
+
+
+document.addEventListener("click", (event) => {
+
+  const link = event.target.closest("a[data-start]");
+  if (!link) return;
+
+  event.preventDefault();
+
+  const seconds = parseInt(link.dataset.start);
+
+  refreshTime(seconds);
+
+  playerIframe?.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
 });
 </script>
