@@ -1,0 +1,60 @@
+<script>
+let iframeOriginalSrc;
+let playerIframe;
+
+function refreshTime(seconds) {
+  if (!playerIframe) {
+    playerIframe = document.querySelector("iframe");
+    if (!playerIframe) return;
+  }
+
+  iframeOriginalSrc ??= playerIframe.src;
+
+  const sep = iframeOriginalSrc.includes("?") ? "&" : "?";
+  playerIframe.src = iframeOriginalSrc + `${sep}start=${seconds}&autoplay=1`;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const activationTag = Array.from(document.querySelectorAll("a.tag"))
+    .find(el => el.textContent.trim().toLowerCase() === "#youtube-local");
+
+  if (!activationTag) return;
+  activationTag.remove();
+
+  const links = document.querySelectorAll('a.external-link[href*="youtube.com/watch"]');
+
+  links.forEach(link => {
+    const url = new URL(link.href);
+    const timeParam = url.searchParams.get("t");
+
+    if (!timeParam) return;
+
+    const seconds = parseInt(timeParam);
+
+    link.dataset.start = seconds;
+    link.href = "#player";
+    link.classList.remove("external-link");
+  });
+
+});
+
+
+document.addEventListener("click", (event) => {
+
+  const link = event.target.closest("a[data-start]");
+  if (!link) return;
+
+  event.preventDefault();
+
+  const seconds = parseInt(link.dataset.start);
+
+  refreshTime(seconds);
+
+  playerIframe?.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
+});
+</script>
